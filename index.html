@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Dispatch — HTML Email Builder v8</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --paper: #F5F0E3; --paper-soft: #FAF6EB; --paper-deep: #ECE5D2;
+    --ink: #161310; --ink-soft: #3A342B; --ink-muted: #8A8172; --ink-faint: #BEB5A0;
+    --accent: #EE6B2F; --accent-soft: #C76033; --accent-wash: #F2DCC8;
+    --line: #DDD3B9; --line-soft: #E8E0CA; --white: #FDFBF4;
+    --success: #3F6B3A; --danger: #A63232;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--paper); color: var(--ink); font-family: 'DM Sans', system-ui, sans-serif; font-size: 15px; line-height: 1.55; -webkit-font-smoothing: antialiased; min-height: 100vh; }
+  .shell { max-width: 1500px; margin: 0 auto; padding: 28px 36px 60px; }
+  header.masthead { border-bottom: 1px solid var(--ink); padding-bottom: 16px; margin-bottom: 28px; display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+  .brand { display: flex; align-items: baseline; gap: 12px; }
+  .brand-mark { font-family: 'Fraunces', serif; font-weight: 600; font-size: 36px; font-style: italic; letter-spacing: -0.02em; line-height: 1; }
+  .brand-mark::first-letter { color: var(--accent); }
+  .brand-sub { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-muted); text-transform: uppercase; letter-spacing: 0.14em; border-left: 1px solid var(--line); padding-left: 12px; }
+  .masthead-meta { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-muted); text-transform: uppercase; letter-spacing: 0.12em; }
+  .tagline { font-family: 'Fraunces', serif; font-size: 17px; font-style: italic; color: var(--ink-soft); margin-bottom: 32px; max-width: 820px; line-height: 1.5; }
+  .tagline .accent { color: var(--accent); font-style: normal; font-weight: 500; }
+  .workspace { display: grid; grid-template-columns: 460px 1fr; gap: 32px; align-items: start; }
+  @media (max-width: 1100px) { .shell { padding: 20px 16px 40px; } .workspace { grid-template-columns: 1fr; } }
+  .panel { background: var(--paper-soft); border: 1px solid var(--line); position: relative; }
+  .panel-label { position: absolute; top: -8px; left: 20px; background: var(--paper); padding: 0 10px; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-muted); }
+  .form-panel { padding: 28px 24px; }
+  .import-section { background: var(--accent-wash); border: 1px dashed var(--accent); padding: 16px 18px; margin-bottom: 24px; }
+  .import-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .import-title { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+  .import-toggle { background: transparent; border: 1px solid var(--accent); color: var(--accent); padding: 4px 10px; font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; cursor: pointer; }
+  .import-toggle:hover { background: var(--accent); color: white; }
+  .import-body { display: none; }
+  .import-section.open .import-body { display: block; }
+  .import-body textarea { background: var(--white); font-family: 'JetBrains Mono', monospace; font-size: 11.5px; line-height: 1.55; min-height: 120px; color: var(--ink); }
+  .import-actions { display: flex; gap: 6px; margin-top: 8px; }
+  .mini-btn { background: var(--ink); color: var(--paper); border: none; padding: 7px 12px; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; cursor: pointer; font-weight: 500; flex: 1; }
+  .mini-btn:hover { background: var(--accent); }
+  .mini-btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--ink); }
+  .mini-btn.ghost:hover { background: var(--ink); color: var(--paper); }
+  .version-picker { background: var(--white); border: 1px solid var(--accent); padding: 12px 14px; margin-top: 12px; }
+  .campaign-info { font-family: 'Fraunces', serif; font-size: 15px; font-weight: 500; color: var(--ink); margin-bottom: 4px; }
+  .campaign-meta { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-muted); margin-bottom: 12px; }
+  .version-tabs { display: flex; gap: 4px; margin-bottom: 12px; flex-wrap: wrap; }
+  .v-tab { background: var(--paper); border: 1px solid var(--line); padding: 6px 10px; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-soft); cursor: pointer; }
+  .v-tab:hover { background: var(--paper-deep); }
+  .v-tab.active { background: var(--accent); color: white; border-color: var(--accent); }
+  .variant-row { margin-bottom: 8px; }
+  .variant-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-muted); margin-bottom: 3px; display: block; }
+  .variant-select { width: 100%; font-size: 12px; padding: 6px 8px; }
+  .form-section { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent); font-weight: 500; margin: 24px 0 12px; padding-bottom: 6px; border-bottom: 1px dashed var(--line); display: flex; align-items: center; justify-content: space-between; }
+  .section-toggle { display: flex; align-items: center; gap: 5px; font-size: 10px; color: var(--ink-soft); font-weight: normal; letter-spacing: 0.05em; text-transform: none; cursor: pointer; }
+  .section-toggle input[type="checkbox"] { width: 13px; height: 13px; accent-color: var(--accent); }
+  .form-section-body.disabled { opacity: 0.4; pointer-events: none; }
+  .layout-info { background: var(--paper-deep); border-left: 3px solid var(--accent); padding: 10px 14px; font-size: 11.5px; font-family: 'Fraunces', serif; font-style: italic; color: var(--ink-soft); line-height: 1.5; margin-bottom: 14px; }
+  .field { margin-bottom: 14px; }
+  .field-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+  .field-grid-3 { display: grid; grid-template-columns: 80px 1fr; gap: 10px; margin-bottom: 10px; align-items: end; }
+  label.field-label { display: block; font-family: 'JetBrains Mono', monospace; font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 5px; font-weight: 500; }
+  input[type="text"], input[type="url"], input[type="color"], input[type="number"], select, textarea { width: 100%; background: var(--white); border: 1px solid var(--line); padding: 9px 11px; font-family: 'DM Sans', sans-serif; font-size: 13.5px; color: var(--ink); transition: border-color 0.15s; }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--ink); }
+  input[type="color"] { padding: 3px; height: 36px; cursor: pointer; }
+  select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23161310' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px; cursor: pointer; }
+  textarea { resize: vertical; min-height: 70px; line-height: 1.5; }
+  textarea.compliance { font-size: 12px; line-height: 1.5; }
+  .field-hint { font-family: 'Fraunces', serif; font-style: italic; font-size: 11.5px; color: var(--ink-muted); margin-top: 4px; }
+  .align-toggle { display: flex; background: var(--white); border: 1px solid var(--line); padding: 2px; gap: 2px; }
+  .align-btn { flex: 1; background: transparent; border: none; padding: 6px 10px; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-soft); cursor: pointer; }
+  .align-btn.active { background: var(--ink); color: var(--paper); }
+  .checkbox-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; }
+  .checkbox-row input[type="checkbox"] { width: 14px; height: 14px; accent-color: var(--accent); cursor: pointer; }
+  .checkbox-row label { font-size: 13px; color: var(--ink-soft); cursor: pointer; }
+  .esp-preview { background: var(--white); border: 1px solid var(--line); padding: 12px 14px; margin-top: 10px; }
+  .esp-preview-title { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-muted); margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+  .esp-preview-title .badge { background: var(--accent); color: white; padding: 2px 6px; font-size: 8px; letter-spacing: 0.12em; font-weight: 600; }
+  .tag-row { display: grid; grid-template-columns: 1fr auto 1fr; gap: 6px; padding: 3px 0; font-family: 'JetBrains Mono', monospace; font-size: 10px; align-items: center; }
+  .tag-from { color: var(--ink-muted); text-decoration: line-through; }
+  .tag-arrow { color: var(--ink-faint); font-size: 9px; }
+  .tag-to { color: var(--accent); font-weight: 500; }
+  .esp-note { font-family: 'Fraunces', serif; font-size: 11.5px; font-style: italic; color: var(--ink-muted); margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--line); line-height: 1.5; }
+  .build-btn { width: 100%; background: var(--ink); color: var(--paper); border: none; padding: 14px 18px; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; letter-spacing: 0.2em; text-transform: uppercase; cursor: pointer; font-weight: 500; margin-top: 12px; }
+  .build-btn:hover { background: var(--accent); }
+  .build-btn.secondary { background: var(--accent); color: white; margin-top: 8px; }
+  .build-btn.secondary:hover { background: var(--ink); }
+  .build-btn.hidden { display: none; }
+  .output-panel { min-height: 500px; }
+  .output-header { padding: 18px 24px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .output-title-block .t { font-family: 'Fraunces', serif; font-size: 18px; font-weight: 500; }
+  .output-title-block .m { font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--ink-muted); margin-top: 2px; }
+  .output-title-block .esp-tag { display: inline-block; background: var(--accent); color: white; padding: 1px 6px; font-size: 9px; letter-spacing: 0.12em; margin-left: 6px; vertical-align: middle; }
+  .output-subheader { padding: 10px 24px; background: var(--paper-soft); border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .mode-toggle { display: flex; gap: 2px; background: var(--white); border: 1px solid var(--line); padding: 2px; }
+  .mode-btn { background: transparent; border: none; padding: 5px 10px; font-family: 'JetBrains Mono', monospace; font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-soft); cursor: pointer; display: flex; align-items: center; gap: 5px; }
+  .mode-btn.active { background: var(--ink); color: var(--paper); }
+  .mode-btn .ico { width: 10px; height: 10px; display: inline-block; border-radius: 50%; }
+  .mode-btn .ico.light { background: #FAF6EB; border: 1px solid var(--ink-muted); }
+  .mode-btn .ico.dark { background: #1a1612; }
+  .mode-btn .ico.auto { background: linear-gradient(90deg, #FAF6EB 50%, #1a1612 50%); border: 1px solid var(--ink-muted); }
+  .output-version-tabs { display: flex; gap: 4px; padding: 12px 24px; background: var(--paper-soft); border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  .o-tab { background: transparent; border: 1px solid var(--line); padding: 7px 14px; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-soft); cursor: pointer; display: flex; align-items: baseline; gap: 6px; }
+  .o-tab:hover { background: var(--paper-deep); }
+  .o-tab.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .o-tab .num { font-family: 'Fraunces', serif; font-size: 14px; font-style: italic; }
+  .o-tab.active .num { color: var(--accent-soft); }
+  .tabs { display: flex; gap: 4px; }
+  .tab { background: transparent; border: 1px solid var(--line); padding: 7px 12px; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-soft); cursor: pointer; }
+  .tab:hover { background: var(--paper-deep); }
+  .tab.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .action-btns { display: flex; gap: 6px; }
+  .action-btn { background: transparent; border: 1px solid var(--line); padding: 7px 12px; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-soft); cursor: pointer; }
+  .action-btn:hover { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .action-btn.copied { background: var(--success); color: white; border-color: var(--success); }
+  .empty-state { padding: 80px 32px; text-align: center; }
+  .empty-state .mark { font-family: 'Fraunces', serif; font-size: 72px; font-style: italic; line-height: 1; color: var(--ink-faint); margin-bottom: 18px; }
+  .empty-state h2 { font-family: 'Fraunces', serif; font-weight: 400; font-size: 22px; color: var(--ink-soft); margin-bottom: 8px; }
+  .empty-state p { color: var(--ink-muted); max-width: 380px; margin: 0 auto; font-size: 14px; }
+  .preview-wrap { padding: 24px; background: var(--paper-deep); min-height: 600px; }
+  .preview-wrap.dark-preview { background: #0f0c08; }
+  .preview-frame { width: 100%; min-height: 1200px; background: #FFFFFF; border: 1px solid var(--line); box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
+  .preview-wrap.dark-preview .preview-frame { background: #1a1612; border-color: #2a2319; }
+  .code-view { padding: 20px 24px; background: var(--ink); color: #E8E0CA; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; line-height: 1.65; white-space: pre; word-break: normal; max-height: 80vh; overflow: auto; }
+  .code-view .t { color: #C76033; }
+  .code-view .a { color: #D4C896; }
+  .code-view .v { color: #A8CBA1; }
+  .code-view .c { color: #6B6660; font-style: italic; }
+  .code-view .m { color: #E6B34A; background: rgba(230, 179, 74, 0.15); padding: 0 2px; }
+  .parse-error { margin-top: 8px; padding: 8px 10px; background: #FBE9E4; border-left: 3px solid var(--danger); color: var(--danger); font-size: 12px; font-family: 'JetBrains Mono', monospace; }
+  .parse-success { margin-top: 8px; padding: 8px 10px; background: #E4F3DF; border-left: 3px solid var(--success); color: var(--success); font-size: 12px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.08em; text-transform: uppercase; }
+  footer.footnote { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line); font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-muted); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+  footer.footnote .dot { color: var(--accent); }
+  .compliance-tabs { display: flex; gap: 2px; background: var(--white); border: 1px solid var(--line); padding: 2px; margin-bottom: 10px; flex-wrap: wrap; }
+  .comp-tab { flex: 1; min-width: 70px; background: transparent; border: none; padding: 6px 8px; font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-soft); cursor: pointer; white-space: nowrap; }
+  .comp-tab.active { background: var(--ink); color: var(--paper); }
+</style>
+</head>
+<body>
+  <div class="shell">
+    <header class="masthead">
+      <div class="brand">
+        <div class="brand-mark">Dispatch</div>
+        <div class="brand-sub">HTML Email Builder · v8<br>Multi-entity compliance footer</div>
+      </div>
+      <div class="masthead-meta"><span id="date-stamp"></span> / Vol. 01 — Issue 08</div>
+    </header>
+    <p class="tagline">Full multi-entity disclosure footer — <span class="accent">SVG, Seychelles, Labuan, Cyprus, Australia</span> — structured the way regulators expect to see it.</p>
+    <div class="workspace">
+      <section class="panel form-panel">
+        <span class="panel-label">Inputs / 01</span>
+        <div class="import-section open" id="import-section">
+          <div class="import-head"><div class="import-title">✦ Import Campaign JSON</div><button class="import-toggle" onclick="toggleImport()">Hide</button></div>
+          <div class="import-body">
+            <textarea id="json-input" placeholder='Paste your campaign JSON here'></textarea>
+            <div class="import-actions"><button class="mini-btn ghost" onclick="loadSample()">Load Sample</button><button class="mini-btn" onclick="parseJson()">Parse & Load →</button></div>
+            <div id="parse-feedback"></div>
+            <div id="version-picker" class="version-picker" style="display:none;">
+              <div id="campaign-info-block"></div>
+              <div class="version-tabs" id="version-tabs"></div>
+              <div class="variant-row"><label class="variant-label">Subject Line</label><select id="subject-variant" class="variant-select" onchange="applyVariants()"></select></div>
+              <div class="variant-row"><label class="variant-label">Preview Text</label><select id="preview-variant" class="variant-select" onchange="applyVariants()"></select></div>
+              <div class="variant-row"><label class="variant-label">CTA Text</label><select id="cta-variant" class="variant-select" onchange="applyVariants()"></select></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">Email Content</div>
+        <div class="field"><label class="field-label" for="subject">Subject Line</label><input id="subject" type="text" value="The Q2 leaderboard is live" /></div>
+        <div class="field"><label class="field-label" for="preview">Preview Text</label><input id="preview" type="text" value="Join the competition — no entry fee." /></div>
+        <div class="field"><label class="field-label" for="greeting">Greeting</label><input id="greeting" type="text" value="Hi {{first_name}}," /></div>
+        <div class="field"><label class="field-label" for="body">Email Body</label><textarea id="body" rows="7">The Q2 Trading Competition is underway, and traders across LATAM are taking their positions on the leaderboard.
+
+You've spent time exploring the platform — this is a natural moment to put that into play. There's no entry fee, the competition runs for four weeks, and rankings update daily.
+
+The top 100 traders at the end of the month share a $50,000 prize pool. A $100 minimum deposit gets you on the board.</textarea></div>
+        <div class="field-grid-2">
+          <div><label class="field-label" for="cta_text">CTA Button Text</label><input id="cta_text" type="text" value="Join the leaderboard" /></div>
+          <div><label class="field-label" for="cta_url">CTA Link</label><input id="cta_url" type="url" value="https://yourdomain.com/competition" /></div>
+        </div>
+        <div class="field"><label class="field-label" for="secondary_link">Secondary Link Text</label><input id="secondary_link" type="text" value="Full competition rules" /></div>
+        <div class="field"><label class="field-label" for="secondary_url">Secondary Link URL</label><input id="secondary_url" type="url" value="https://yourdomain.com/rules" /></div>
+
+        <div class="form-section"><span>Logo · Header</span><label class="section-toggle"><input type="checkbox" id="opt_logo" checked onchange="toggleLogoSection()" />Enabled</label></div>
+        <div class="form-section-body" id="logo-section-body">
+          <div class="field"><label class="field-label" for="logo_url">Logo URL</label><input id="logo_url" type="url" placeholder="https://... paste your WeTrade logo URL here" value="" /><div class="field-hint">Paste the URL of your actual WeTrade brand logo (preferably the full orange wordmark with tagline).</div></div>
+          <div class="field"><label class="field-label" for="logo_alt">Alt Text</label><input id="logo_alt" type="text" value="WeTrade" /></div>
+          <div class="field">
+            <label class="field-label">Alignment</label>
+            <div class="align-toggle">
+              <button type="button" class="align-btn active" data-align="left" onclick="setLogoAlign('left')">Left</button>
+              <button type="button" class="align-btn" data-align="center" onclick="setLogoAlign('center')">Center</button>
+            </div>
+            <input type="hidden" id="logo_align" value="left" />
+          </div>
+        </div>
+
+        <div class="form-section"><span>Stats Block</span><label class="section-toggle"><input type="checkbox" id="opt_stats" checked onchange="toggleStatsSection()" />Enabled</label></div>
+        <div class="form-section-body" id="stats-section-body">
+          <div class="field-grid-3"><div><label class="field-label">Stat 1</label><input id="stat1_value" type="text" value="$50K" /></div><div><label class="field-label">Label 1</label><input id="stat1_label" type="text" value="Prize Pool" /></div></div>
+          <div class="field-grid-3"><div><label class="field-label">Stat 2</label><input id="stat2_value" type="text" value="100" /></div><div><label class="field-label">Label 2</label><input id="stat2_label" type="text" value="Winners" /></div></div>
+          <div class="field-grid-3"><div><label class="field-label">Stat 3</label><input id="stat3_value" type="text" value="4 Weeks" /></div><div><label class="field-label">Label 3</label><input id="stat3_label" type="text" value="Competition" /></div></div>
+        </div>
+
+        <div class="form-section"><span>Banner · Top of Email</span><label class="section-toggle"><input type="checkbox" id="opt_banner" checked onchange="toggleBannerSection()" />Enabled</label></div>
+        <div class="form-section-body" id="banner-section-body">
+          <div class="field"><label class="field-label" for="banner_url">Banner Image URL</label><input id="banner_url" type="url" placeholder="https://mcusercontent.com/.../banner.png" value="" /></div>
+          <div class="field"><label class="field-label" for="banner_alt">Alt Text</label><input id="banner_alt" type="text" value="Q2 Trading Competition — $50K prize pool, 100 winners, 4 weeks" /></div>
+        </div>
+
+        <div class="form-section"><span>Footer Banner · Bottom</span><label class="section-toggle"><input type="checkbox" id="opt_footer_banner" onchange="toggleFooterBannerSection()" />Enabled</label></div>
+        <div class="form-section-body disabled" id="footer-banner-section-body">
+          <div class="layout-info">Sits between compliance text and unsubscribe row. Full-width 600px, optionally clickable. Good for brand sign-off, app download graphic, or social icons image.</div>
+          <div class="field"><label class="field-label" for="footer_banner_url">Footer Banner URL</label><input id="footer_banner_url" type="url" placeholder="https://..." value="" /></div>
+          <div class="field"><label class="field-label" for="footer_banner_alt">Alt Text</label><input id="footer_banner_alt" type="text" value="WeTrade — In Trust We Trade" /></div>
+          <div class="field"><label class="field-label" for="footer_banner_link">Link URL (optional)</label><input id="footer_banner_link" type="url" placeholder="https://wetrade.com" value="" /><div class="field-hint">Leave blank for non-clickable. Fill with app download page, home page, or promo landing.</div></div>
+        </div>
+
+        <div class="form-section">Brand</div>
+        <div class="field-grid-2">
+          <div><label class="field-label" for="company_name">Brand Name</label><input id="company_name" type="text" value="WeTrade" /></div>
+          <div><label class="field-label" for="brand_color">Accent Color</label><input id="brand_color" type="color" value="#EE6B2F" /></div>
+        </div>
+        <div class="field"><label class="field-label" for="sender_signature">Sender Signature</label><input id="sender_signature" type="text" value="— The WeTrade Team" /></div>
+
+        <div class="form-section">Compliance · Multi-Entity Footer</div>
+        <div class="layout-info">Full WeTrade multi-entity disclosure. Edit any block below.</div>
+
+        <div class="field">
+          <label class="field-label">Regulator Template</label>
+          <div class="compliance-tabs">
+            <button type="button" class="comp-tab active" onclick="loadComplianceTemplate('wetrade_compact')">Compact</button>
+            <button type="button" class="comp-tab" onclick="loadComplianceTemplate('wetrade_full')">Full</button>
+            <button type="button" class="comp-tab" onclick="loadComplianceTemplate('wetrade_svg')">SVG Only</button>
+            <button type="button" class="comp-tab" onclick="loadComplianceTemplate('wetrade_cysec')">CySEC Only</button>
+            <button type="button" class="comp-tab" onclick="loadComplianceTemplate('wetrade_asic')">ASIC Only</button>
+          </div>
+          <div class="field-hint">Click a template to replace the blocks below. Compact is good for standard promotional emails; switch to Full when compliance requires all entity details.</div>
+        </div>
+
+        <div class="field">
+          <label class="field-label" for="entity_disclosure">Entity Authorization Block</label>
+          <textarea id="entity_disclosure" rows="5" class="compliance">WeTrade International LLC is authorised and regulated by the Financial Services Authority of Saint Vincent and the Grenadines (LLC No: 1945 LLC 2022), registered at Euro House, Richmond Hill Road, Kingstown, Saint Vincent and the Grenadines.
+
+This website is owned and operated by WeTrade International LLC.</textarea>
+          <div class="field-hint">Compact single-entity block for LATAM campaigns. Click "WeTrade Full" tab above to load all 5 entities when needed.</div>
+        </div>
+
+        <div class="field">
+          <label class="field-label" for="payment_notice">Payment & Operator Notice</label>
+          <textarea id="payment_notice" rows="2" class="compliance"></textarea>
+          <div class="field-hint">Leave empty for compact footer. Used for full multi-entity block.</div>
+        </div>
+
+        <div class="field">
+          <label class="field-label" for="restricted_territories">Restricted Territories</label>
+          <textarea id="restricted_territories" rows="3" class="compliance">WeTrade does not provide services to residents of the USA, EU member countries, UK, Australia, and other restricted jurisdictions. See our Terms of Service for the complete list.</textarea>
+        </div>
+
+        <div class="field">
+          <label class="field-label" for="risk_warning">Risk Warning</label>
+          <textarea id="risk_warning" rows="2" class="compliance">Risk Warning: Trading CFDs and Margin FX Contracts involves significant risk of loss. You may lose more than your initial deposit. These products may not be suitable for all investors.</textarea>
+        </div>
+
+        <div class="field">
+          <label class="field-label" for="disclaimer_text">Disclaimer</label>
+          <textarea id="disclaimer_text" rows="2" class="compliance">Disclaimer: This communication is for informational purposes only and does not constitute investment advice, an offer, or a solicitation. WeTrade is not liable for any actions taken based on this information.</textarea>
+        </div>
+
+        <div class="field"><label class="field-label" for="privacy_url">Privacy Policy URL</label><input id="privacy_url" type="url" value="https://wetrade.com/privacy" /></div>
+
+        <div class="form-section">Export Format</div>
+        <div class="field"><label class="field-label" for="esp">ESP Platform</label>
+          <select id="esp" onchange="updateEspPreview()">
+            <option value="generic">Generic (keep {{placeholder}} tags)</option>
+            <option value="mailchimp">Mailchimp</option>
+            <option value="klaviyo">Klaviyo</option>
+            <option value="sendgrid">SendGrid</option>
+            <option value="hubspot">HubSpot</option>
+            <option value="braze">Braze</option>
+            <option value="brevo">Brevo (Sendinblue)</option>
+          </select>
+        </div>
+        <div id="esp-preview-box" class="esp-preview" style="display:none;"></div>
+
+        <div class="form-section">Options</div>
+        <div class="checkbox-row"><input type="checkbox" id="opt_webversion" checked /><label for="opt_webversion">"View in browser" link</label></div>
+        <div class="checkbox-row"><input type="checkbox" id="opt_permission" checked /><label for="opt_permission">Permission reminder in footer</label></div>
+        <div class="checkbox-row"><input type="checkbox" id="opt_darkmode" checked /><label for="opt_darkmode">Dark mode support</label></div>
+
+        <button id="build-btn" class="build-btn" onclick="buildCurrent()">Build This Email</button>
+        <button id="build-all-btn" class="build-btn secondary hidden" onclick="buildAll()">Build All Versions</button>
+      </section>
+
+      <section class="panel output-panel">
+        <span class="panel-label">Output / 02</span>
+        <div id="output-content">
+          <div class="empty-state"><div class="mark">✦</div><h2>Multi-entity compliance ready.</h2><p>Standard layout with the full WeTrade disclosure footer: SVG, Seychelles, Labuan, Cyprus, Australia.</p></div>
+        </div>
+      </section>
+    </div>
+
+    <footer class="footnote"><div><span class="dot">●</span> 5-entity disclosure · Risk + Disclaimer blocks · Dark-mode · ESP-aware</div><div>v8 · Compliance-first</div></footer>
+  </div>
+
+<script>
+  const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  const d = new Date();
+  document.getElementById('date-stamp').textContent = `${String(d.getDate()).padStart(2,'0')} ${months[d.getMonth()]} ${d.getFullYear()}`;
+
+  window.toggleLogoSection = () => document.getElementById('logo-section-body').classList.toggle('disabled', !document.getElementById('opt_logo').checked);
+  window.toggleStatsSection = () => document.getElementById('stats-section-body').classList.toggle('disabled', !document.getElementById('opt_stats').checked);
+  window.toggleBannerSection = () => document.getElementById('banner-section-body').classList.toggle('disabled', !document.getElementById('opt_banner').checked);
+  window.setLogoAlign = (align) => {
+    document.getElementById('logo_align').value = align;
+    document.querySelectorAll('.align-btn').forEach(b => b.classList.toggle('active', b.getAttribute('data-align') === align));
+  };
+
+  const COMPLIANCE_TEMPLATES = {
+    wetrade_compact: {
+      entity: `WeTrade International LLC is authorised and regulated by the Financial Services Authority of Saint Vincent and the Grenadines (LLC No: 1945 LLC 2022), registered at Euro House, Richmond Hill Road, Kingstown, Saint Vincent and the Grenadines.
+
+This website is owned and operated by WeTrade International LLC.`,
+      payment: ``,
+      restricted: `WeTrade does not provide services to residents of the USA, EU member countries, UK, Australia, and other restricted jurisdictions. See our Terms of Service for the complete list.`,
+      risk: `Risk Warning: Trading CFDs and Margin FX Contracts involves significant risk of loss. You may lose more than your initial deposit. These products may not be suitable for all investors.`,
+      disclaimer: `Disclaimer: This communication is for informational purposes only and does not constitute investment advice, an offer, or a solicitation. WeTrade is not liable for any actions taken based on this information.`
+    },
+    wetrade_full: {
+      entity: `WeTrade is authorised and regulated in various jurisdictions.
+
+WeTrade International LLC is authorised and regulated by Registrar of Limited Liability Companies, granted by the Financial Services Authority of Saint Vincent and the Grenadines (Limited Liability Company No: 1945 LLC 2022) at Euro House, Richmond Hill Road, Kingstown, Saint Vincent and the Grenadines.
+
+WeTrade Capital (Seychelles) Limited is licensed by the Financial Services Authority (FSA) of Seychelles with a Securities Dealer Licence Number SD196, Registered Office: Office 12, 3rd Floor, IMAD Complex, Ile Du Port, Mahe, Seychelles.
+
+WeTrade Capital Limited is regulated by Labuan Financial Services Authority (licence number: MB/2/0010), with a registered office at Unit Level 9F (2), Main Office Tower, Financial Park Labuan, Jalan Merdeka, 87000, Federal Territory Labuan, Malaysia.
+
+WeTrade International CY Limited is a company incorporated under the laws of Cyprus with registration number HE 406773, having its business address at Agias Fylaxeos & Zinonos Rossid 2, 2nd floor, 3083 Limassol, Cyprus. WeTrade International CY Limited is authorised and regulated by the Cyprus Securities and Exchange Commission (CySEC), license number 435/23.
+
+WeTrade Capital (Australia) Pty Ltd is a company incorporated under the laws of Australia with company number ACN 649 150 922 and business number ABN 29 649 150 922. WeTrade Capital (Australia) Pty Ltd is authorised and regulated by the Australian Securities and Investments Commission (ASIC) with licence number (AFSL) 000546242 and business address at 48 Cullen Street, Lane Cove West, NSW 2066, Australia.`,
+      payment: `All payments related to PaySafe and other companies are processed by WeTrade Capital Limited.
+
+Note: This website is owned and operated by WeTrade International LLC, a legal entity registered in St. Vincent. The products, services, and content showcased on this platform are exclusively associated with WeTrade International LLC and do not have any affiliations with other entities.`,
+      restricted: `WeTrade International LLC does not provide services to individuals in the United States of America, Haiti, Iran, Suriname, the Democratic Republic of Korea, Puerto Rico, the Occupied Area of Cyprus, Syria, Cuba, Russia, Belarus, Sudan, Australia, the European Union member countries, United Kingdom and Malaysia.`,
+      risk: `Risk Warning: Investing in CFDs and Margin FX Contracts carries high risks and is not suitable for all investors. You may lose more than your initial deposit. These products may not be suitable for all individuals. Before you register for our services, it is important for you to thoroughly understand our Risk Disclosure.`,
+      disclaimer: `Disclaimer: The communication is for informational purposes only and does not constitute investment or trading advice, nor does it include any recommendations. Additionally, it does not serve as an offer or solicitation to engage in transactions involving financial instruments. WeTrade does not take responsibility for any actions taken based on the information provided, nor for any outcomes that may occur as a result of the actions taken.`
+    },
+    wetrade_svg: {
+      entity: `WeTrade International LLC is authorised and regulated by Registrar of Limited Liability Companies, granted by the Financial Services Authority of Saint Vincent and the Grenadines (Limited Liability Company No: 1945 LLC 2022) at Euro House, Richmond Hill Road, Kingstown, Saint Vincent and the Grenadines.`,
+      payment: `This website is owned and operated by WeTrade International LLC, a legal entity registered in St. Vincent.`,
+      restricted: `WeTrade International LLC does not provide services to individuals in the United States of America, Haiti, Iran, Suriname, the Democratic Republic of Korea, Puerto Rico, the Occupied Area of Cyprus, Syria, Cuba, Russia, Belarus, Sudan, Australia, the European Union member countries, United Kingdom and Malaysia.`,
+      risk: `Risk Warning: Investing in CFDs and Margin FX Contracts carries high risks and is not suitable for all investors. You may lose more than your initial deposit.`,
+      disclaimer: `Disclaimer: The communication is for informational purposes only and does not constitute investment or trading advice. WeTrade does not take responsibility for any actions taken based on the information provided.`
+    },
+    wetrade_cysec: {
+      entity: `WeTrade International CY Limited is a company incorporated under the laws of Cyprus with registration number HE 406773, having its business address at Agias Fylaxeos & Zinonos Rossid 2, 2nd floor, 3083 Limassol, Cyprus. WeTrade International CY Limited is authorised and regulated by the Cyprus Securities and Exchange Commission (CySEC), license number 435/23.`,
+      payment: ``,
+      restricted: ``,
+      risk: `Risk Warning: CFDs are complex instruments and come with a high risk of losing money rapidly due to leverage. [XX]% of retail investor accounts lose money when trading CFDs with this provider. You should consider whether you understand how CFDs work and whether you can afford to take the high risk of losing your money.`,
+      disclaimer: `Disclaimer: The communication is for informational purposes only and does not constitute investment advice or a recommendation.`
+    },
+    wetrade_asic: {
+      entity: `WeTrade Capital (Australia) Pty Ltd is a company incorporated under the laws of Australia with company number ACN 649 150 922 and business number ABN 29 649 150 922. WeTrade Capital (Australia) Pty Ltd is authorised and regulated by the Australian Securities and Investments Commission (ASIC) with licence number (AFSL) 000546242 and business address at 48 Cullen Street, Lane Cove West, NSW 2066, Australia.`,
+      payment: ``,
+      restricted: ``,
+      risk: `Risk Warning: Trading in derivatives and foreign exchange involves a high level of risk and can result in losses that exceed your initial investment. These products may not be suitable for all investors. You should consider our Product Disclosure Statement and Target Market Determination before trading.`,
+      disclaimer: `Disclaimer: This communication is general information only and does not take into account your objectives, financial situation, or needs.`
+    }
+  };
+
+  window.loadComplianceTemplate = (key) => {
+    const t = COMPLIANCE_TEMPLATES[key];
+    if (!t) return;
+    if (!confirm('Replace compliance blocks with this template?')) return;
+    document.getElementById('entity_disclosure').value = t.entity;
+    document.getElementById('payment_notice').value = t.payment;
+    document.getElementById('restricted_territories').value = t.restricted;
+    document.getElementById('risk_warning').value = t.risk;
+    document.getElementById('disclaimer_text').value = t.disclaimer;
+    document.querySelectorAll('.comp-tab').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+  };
+
+  const ESP_MAPPINGS = {
+    generic: { label: 'Generic', note: 'Keeps {{placeholder}} tags as-is.', tags: { '{{first_name}}': '{{first_name}}', '{{last_name}}': '{{last_name}}', '{{email}}': '{{email}}', '{{unsubscribe_url}}': '{{unsubscribe_url}}', '{{preferences_url}}': '{{preferences_url}}', '{{web_version_url}}': '{{web_version_url}}' } },
+    mailchimp: { label: 'Mailchimp', note: 'Paste into "Code Your Own" template.', tags: { '{{first_name}}': '*|FNAME|*', '{{last_name}}': '*|LNAME|*', '{{email}}': '*|EMAIL|*', '{{unsubscribe_url}}': '*|UNSUB|*', '{{preferences_url}}': '*|UPDATE_PROFILE|*', '{{web_version_url}}': '*|ARCHIVE|*' } },
+    klaviyo: { label: 'Klaviyo', note: 'Paste into HTML editor.', tags: { '{{first_name}}': "{{ first_name|default:'there' }}", '{{last_name}}': "{{ last_name|default:'' }}", '{{email}}': '{{ email }}', '{{unsubscribe_url}}': '{% unsubscribe %}', '{{preferences_url}}': '{{ organization.update_link }}', '{{web_version_url}}': '{{ organization.view_email_in_browser_url }}' } },
+    sendgrid: { label: 'SendGrid', note: 'Use in Marketing Campaigns → Code Editor.', tags: { '{{first_name}}': '{{first_name}}', '{{last_name}}': '{{last_name}}', '{{email}}': '{{email}}', '{{unsubscribe_url}}': '<%asm_group_unsubscribe_raw_url%>', '{{preferences_url}}': '<%asm_preferences_raw_url%>', '{{web_version_url}}': '<%view_email_in_browser%>' } },
+    hubspot: { label: 'HubSpot', note: 'Paste into Custom email → Code your own.', tags: { '{{first_name}}': '{{ contact.firstname }}', '{{last_name}}': '{{ contact.lastname }}', '{{email}}': '{{ contact.email }}', '{{unsubscribe_url}}': '{{ unsubscribe_link }}', '{{preferences_url}}': '{{ unsubscribe_preferences_url }}', '{{web_version_url}}': '{{ view_as_page_url }}' } },
+    braze: { label: 'Braze', note: "Braze's Liquid syntax with fallback.", tags: { '{{first_name}}': "{{${first_name} | default: 'there'}}", '{{last_name}}': '{{${last_name}}}', '{{email}}': '{{${email_address}}}', '{{unsubscribe_url}}': '{{${set_user_to_unsubscribed_url}}}', '{{preferences_url}}': '{{${set_user_to_unsubscribed_url}}}', '{{web_version_url}}': '{{${view_in_browser_url}}}' } },
+    brevo: { label: 'Brevo', note: 'Brevo auto-inserts unsubscribe.', tags: { '{{first_name}}': '{{contact.FIRSTNAME}}', '{{last_name}}': '{{contact.LASTNAME}}', '{{email}}': '{{contact.EMAIL}}', '{{unsubscribe_url}}': '{{ unsubscribe }}', '{{preferences_url}}': '{{ mirror }}', '{{web_version_url}}': '{{ mirror }}' } }
+  };
+
+  function updateEspPreview() {
+    const esp = document.getElementById('esp').value;
+    const map = ESP_MAPPINGS[esp];
+    const box = document.getElementById('esp-preview-box');
+    if (esp === 'generic') { box.style.display = 'none'; return; }
+    box.style.display = 'block';
+    const rows = Object.entries(map.tags).map(([from, to]) => `<div class="tag-row"><span class="tag-from">${esc(from)}</span><span class="tag-arrow">→</span><span class="tag-to">${esc(to)}</span></div>`).join('');
+    box.innerHTML = `<div class="esp-preview-title"><span>Tag Conversion</span><span class="badge">${esc(map.label)}</span></div>${rows}<div class="esp-note">${esc(map.note)}</div>`;
+  }
+
+  function convertMergeTags(html, esp) {
+    const map = ESP_MAPPINGS[esp];
+    if (!map) return html;
+    let result = html;
+    for (const [from, to] of Object.entries(map.tags)) {
+      const fromEscaped = from.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      result = result.replace(new RegExp(fromEscaped, 'g'), to);
+    }
+    return result;
+  }
+
+  const SAMPLE_JSON = {
+    "campaign": "Leaderboard Competition — Dormant Reactivation",
+    "language": "English",
+    "segment": "Dormant (inactive 60+ days)",
+    "versions": [
+      { "version_number": 1, "angle": "No-pressure re-entry", "subject_lines": ["It's been a while", "Your account is still active", "A low-pressure invitation"], "preview_texts": ["The Q2 leaderboard is open if you want to look.", "Nothing changed about your account.", "No onboarding — just log back in."], "email_body": "It's been a few months since we last saw you online. No judgment — traders step away for lots of reasons, and the platform works the same whether you check in weekly or once a quarter.\n\nOur Q2 leaderboard competition opened this week. Four weeks, daily rankings, top 100 traders share a $50,000 prize pool. Entry is free. A $100 deposit gets you a position on the board.\n\nIf that's not your speed right now, nothing changes about your account.", "ctas": ["View the competition", "Log back in", "Update preferences"], "follow_up": "Send 10 days later only to clickers who didn't deposit." },
+      { "version_number": 2, "angle": "What's changed", "subject_lines": ["A short update from your account", "What's new since you last traded", "Q2 update, briefly"], "preview_texts": ["Leaderboard, new instruments, platform changes.", "Two minutes to catch up.", "No sales pitch — just an update."], "email_body": "A quick update from your side of the platform.\n\nThe Q2 leaderboard competition is live this month. Four weeks of trading, daily rankings, and a $50,000 prize pool split across the top 100 positions.\n\nA few other things have shifted since your last session. Execution speeds are faster on most pairs, the mobile app has had three meaningful releases, and market coverage expanded in Asia and LATAM.", "ctas": ["See what's new", "Open my dashboard", "View the competition"], "follow_up": "Send 7 days later with one market data point." },
+      { "version_number": 3, "angle": "Benchmark re-entry", "subject_lines": ["A quiet way to test your approach", "Four weeks to benchmark your trading", "If you've been waiting for a reason"], "preview_texts": ["Defined start and end.", "No long-term commitment.", "$100 minimum, 100 winners."], "email_body": "Coming back to trading after a break can feel harder than starting fresh.\n\nThe Q2 leaderboard competition might be useful for exactly that — a defined four-week window to see where you stand, with daily feedback on how your approach compares to other active traders.\n\nThe setup is simple. A $100 minimum deposit opens the account. The leaderboard updates each day.", "ctas": ["Read how it works", "Join the competition", "Not right now"], "follow_up": "Send 14 days later only to non-openers." }
+    ]
+  };
+
+  window.toggleImport = () => {
+    const sec = document.getElementById('import-section');
+    sec.classList.toggle('open');
+    sec.querySelector('.import-toggle').textContent = sec.classList.contains('open') ? 'Hide' : 'Show';
+  };
+  window.loadSample = () => {
+    document.getElementById('json-input').value = JSON.stringify(SAMPLE_JSON, null, 2);
+    parseJson();
+  };
+
+  let loadedCampaign = null, activeVersionIdx = 0, builtVersions = [], activeOutputIdx = 0, currentView = 'preview', previewMode = 'auto';
+
+  window.parseJson = () => {
+    const raw = document.getElementById('json-input').value.trim();
+    const feedback = document.getElementById('parse-feedback');
+    feedback.innerHTML = '';
+    if (!raw) { feedback.innerHTML = '<div class="parse-error">Paste JSON first.</div>'; return; }
+    let data;
+    try { data = JSON.parse(raw); }
+    catch (e) { feedback.innerHTML = '<div class="parse-error">Invalid JSON: ' + esc(e.message) + '</div>'; return; }
+    if (!data.versions || !Array.isArray(data.versions) || data.versions.length === 0) {
+      feedback.innerHTML = '<div class="parse-error">Expected a "versions" array.</div>'; return;
+    }
+    loadedCampaign = data;
+    activeVersionIdx = 0;
+    renderVersionPicker();
+    applyVersion();
+    document.getElementById('build-all-btn').classList.remove('hidden');
+    feedback.innerHTML = '<div class="parse-success">Loaded ' + data.versions.length + ' version' + (data.versions.length === 1 ? '' : 's') + ' · ' + esc(data.campaign || 'Campaign') + '</div>';
+  };
+
+  function renderVersionPicker() {
+    if (!loadedCampaign) return;
+    document.getElementById('version-picker').style.display = 'block';
+    document.getElementById('campaign-info-block').innerHTML = `<div class="campaign-info">${esc(loadedCampaign.campaign || 'Campaign')}</div><div class="campaign-meta">${esc(loadedCampaign.segment || '')} · ${esc(loadedCampaign.language || '')} · ${loadedCampaign.versions.length} versions</div>`;
+    document.getElementById('version-tabs').innerHTML = loadedCampaign.versions.map((v, i) => `<button class="v-tab ${i === activeVersionIdx ? 'active' : ''}" onclick="selectVersion(${i})">V${v.version_number || i + 1} · ${esc(v.angle || 'Variant')}</button>`).join('');
+    const v = loadedCampaign.versions[activeVersionIdx];
+    populateVariantDropdown('subject-variant', v.subject_lines);
+    populateVariantDropdown('preview-variant', v.preview_texts);
+    populateVariantDropdown('cta-variant', v.ctas);
+  }
+
+  function populateVariantDropdown(id, options) {
+    document.getElementById(id).innerHTML = (options || []).map((o, i) => `<option value="${i}">Option ${i + 1}: ${esc((o || '').slice(0, 50))}${o && o.length > 50 ? '...' : ''}</option>`).join('');
+  }
+
+  window.selectVersion = (idx) => { activeVersionIdx = idx; renderVersionPicker(); applyVersion(); };
+
+  function applyVersion() {
+    if (!loadedCampaign) return;
+    const v = loadedCampaign.versions[activeVersionIdx];
+    document.getElementById('subject-variant').value = 0;
+    document.getElementById('preview-variant').value = 0;
+    document.getElementById('cta-variant').value = 0;
+    document.getElementById('subject').value = (v.subject_lines || [''])[0] || '';
+    document.getElementById('preview').value = (v.preview_texts || [''])[0] || '';
+    document.getElementById('body').value = v.email_body || '';
+    document.getElementById('cta_text').value = (v.ctas || [''])[0] || '';
+  }
+
+  window.applyVariants = () => {
+    if (!loadedCampaign) return;
+    const v = loadedCampaign.versions[activeVersionIdx];
+    document.getElementById('subject').value = (v.subject_lines || [])[parseInt(document.getElementById('subject-variant').value, 10)] || '';
+    document.getElementById('preview').value = (v.preview_texts || [])[parseInt(document.getElementById('preview-variant').value, 10)] || '';
+    document.getElementById('cta_text').value = (v.ctas || [])[parseInt(document.getElementById('cta-variant').value, 10)] || '';
+  };
+
+  const valOf = id => document.getElementById(id).value;
+  const chk = id => document.getElementById(id).checked;
+
+  function getData(overrides = {}) {
+    return Object.assign({
+      subject: valOf('subject'), preview: valOf('preview'), greeting: valOf('greeting'), body: valOf('body'),
+      cta_text: valOf('cta_text'), cta_url: valOf('cta_url'),
+      secondary_link: valOf('secondary_link'), secondary_url: valOf('secondary_url'),
+      company_name: valOf('company_name'), brand_color: valOf('brand_color'), sender_signature: valOf('sender_signature'),
+      entity_disclosure: valOf('entity_disclosure'),
+      payment_notice: valOf('payment_notice'),
+      restricted_territories: valOf('restricted_territories'),
+      risk_warning: valOf('risk_warning'),
+      disclaimer_text: valOf('disclaimer_text'),
+      privacy_url: valOf('privacy_url'),
+      opt_logo: chk('opt_logo'), logo_url: valOf('logo_url'), logo_alt: valOf('logo_alt'), logo_align: valOf('logo_align'),
+      opt_stats: chk('opt_stats'),
+      stat1_value: valOf('stat1_value'), stat1_label: valOf('stat1_label'),
+      stat2_value: valOf('stat2_value'), stat2_label: valOf('stat2_label'),
+      stat3_value: valOf('stat3_value'), stat3_label: valOf('stat3_label'),
+      opt_banner: chk('opt_banner'), banner_url: valOf('banner_url'), banner_alt: valOf('banner_alt'),
+      opt_webversion: chk('opt_webversion'), opt_permission: chk('opt_permission'), opt_darkmode: chk('opt_darkmode')
+    }, overrides);
+  }
+
+  function esc(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+
+  function paragraphs(body) {
+    return body.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean).map(p =>
+      `\n                <p class="text-main" style="margin: 0 0 20px 0; font-family: Georgia, 'Times New Roman', serif; font-size: 16px; line-height: 1.65; color: #1a1a1a;">${esc(p).replace(/\n/g, '<br>')}</p>`
+    ).join('');
+  }
+
+  function compParagraphs(text) {
+    if (!text || !text.trim()) return '';
+    return text.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean).map(p =>
+      `<p class="text-muted" style="margin: 0 0 10px 0; font-family: Arial, sans-serif; font-size: 10.5px; line-height: 1.6; color: #666666;">${esc(p).replace(/\n/g, '<br>')}</p>`
+    ).join('\n              ');
+  }
+
+  const DARK_RULES = `
+      .bg-outer { background-color: #1a1612 !important; }
+      .bg-inner { background-color: #2a2319 !important; border-color: #3a3228 !important; }
+      .text-main { color: #ebe4d4 !important; }
+      .text-muted { color: #b8b0a0 !important; }
+      .text-faint { color: #8a8272 !important; }
+      .divider-color { border-color: #3d3528 !important; }
+      .footer-bg { background-color: #1a1612 !important; }
+      .card-link { color: #EE6B2F !important; }
+      .stats-divider { border-color: #3d3528 !important; }
+      .stats-bg { background-color: #201a14 !important; }`;
+
+  function buildLogoHeaderBlock(d) {
+    if (!d.opt_logo || !d.logo_url) return '';
+    const align = d.logo_align === 'center' ? 'center' : 'left';
+    return `
+          <tr>
+            <td align="${align}" class="mobile-padding" style="padding: 28px 40px 20px 40px;">
+              <img src="${esc(d.logo_url)}" alt="${esc(d.logo_alt)}" width="180" style="display: block; max-width: 180px; height: auto; border: 0; outline: none; text-decoration: none;" />
+            </td>
+          </tr>`;
+  }
+
+  function buildStatsBlock(d) {
+    if (!d.opt_stats) return '';
+    const stats = [{ value: d.stat1_value, label: d.stat1_label }, { value: d.stat2_value, label: d.stat2_label }, { value: d.stat3_value, label: d.stat3_label }].filter(s => s.value || s.label);
+    if (stats.length === 0) return '';
+    const brand = esc(d.brand_color);
+    const cells = stats.map((s, i) => {
+      const isLast = i === stats.length - 1;
+      return `
+                  <td align="center" valign="middle" style="padding: 18px 8px; ${isLast ? '' : 'border-right: 1px solid #e8e0ca;'}" class="${isLast ? '' : 'stats-divider'}">
+                    <div style="font-family: Georgia, 'Times New Roman', serif; font-size: 30px; font-weight: 600; line-height: 1.1; color: ${brand}; letter-spacing: -0.5px;">${esc(s.value)}</div>
+                    <div class="text-faint" style="font-family: Arial, sans-serif; font-size: 10px; font-weight: 600; letter-spacing: 1.3px; text-transform: uppercase; color: #888888; margin-top: 6px;">${esc(s.label)}</div>
+                  </td>`;
+    }).join('');
+    return `
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: 8px 0 20px 0; background-color: #faf7ef; border: 1px solid #e8e0ca;" class="stats-bg divider-color">
+                <tr>${cells}
+                </tr>
+              </table>`;
+  }
+
+  function buildBannerBlock(d) {
+    if (!d.opt_banner || !d.banner_url) return '';
+    const imgTag = `<img src="${esc(d.banner_url)}" alt="${esc(d.banner_alt)}" width="600" style="display: block; width: 100%; max-width: 600px; height: auto; border: 0; outline: none; text-decoration: none;" />`;
+    const wrapped = d.cta_url ? `<a href="${esc(d.cta_url)}" style="text-decoration: none; display: block;">${imgTag}</a>` : imgTag;
+    // Banner sits at the very top of the email as the first visual element.
+    // No padding needed — it goes edge-to-edge.
+    return `
+          <tr>
+            <td style="padding: 0;">
+              ${wrapped}
+            </td>
+          </tr>`;
+  }
+
+  function buildComplianceFooter(d) {
+    const sections = [];
+
+    if (d.entity_disclosure && d.entity_disclosure.trim()) {
+      sections.push(`
+          <tr>
+            <td class="mobile-padding" style="padding: 28px 40px 0 40px;">
+              <p class="text-faint" style="margin: 0 0 10px 0; font-family: Arial, sans-serif; font-size: 10px; font-weight: 600; letter-spacing: 1.2px; text-transform: uppercase; color: #888888;">Regulatory Information</p>
+              ${compParagraphs(d.entity_disclosure)}
+            </td>
+          </tr>`);
+    }
+
+    if (d.payment_notice && d.payment_notice.trim()) {
+      sections.push(`
+          <tr>
+            <td class="mobile-padding" style="padding: 8px 40px 0 40px;">
+              ${compParagraphs(d.payment_notice)}
+            </td>
+          </tr>`);
+    }
+
+    if (d.restricted_territories && d.restricted_territories.trim()) {
+      sections.push(`
+          <tr>
+            <td class="mobile-padding" style="padding: 8px 40px 0 40px;">
+              <p class="text-faint" style="margin: 0 0 6px 0; font-family: Arial, sans-serif; font-size: 10px; font-weight: 600; letter-spacing: 1.2px; text-transform: uppercase; color: #888888;">Restricted Territories</p>
+              ${compParagraphs(d.restricted_territories)}
+            </td>
+          </tr>`);
+    }
+
+    if (d.risk_warning && d.risk_warning.trim()) {
+      sections.push(`
+          <tr>
+            <td class="mobile-padding" style="padding: 16px 40px 0 40px;">
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #faf7ef; border-left: 3px solid #EE6B2F;" class="stats-bg">
+                <tr>
+                  <td style="padding: 14px 16px;">
+                    <p class="text-faint" style="margin: 0 0 6px 0; font-family: Arial, sans-serif; font-size: 10px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: #C76033;">Risk Warning</p>
+                    <p class="text-muted" style="margin: 0; font-family: Arial, sans-serif; font-size: 11px; line-height: 1.55; color: #555555;">${esc(d.risk_warning.replace(/^Risk Warning:\s*/i, ''))}</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>`);
+    }
+
+    if (d.disclaimer_text && d.disclaimer_text.trim()) {
+      sections.push(`
+          <tr>
+            <td class="mobile-padding" style="padding: 16px 40px 0 40px;">
+              <p class="text-faint" style="margin: 0 0 6px 0; font-family: Arial, sans-serif; font-size: 10px; font-weight: 600; letter-spacing: 1.2px; text-transform: uppercase; color: #888888;">Disclaimer</p>
+              ${compParagraphs(d.disclaimer_text.replace(/^Disclaimer:\s*/i, ''))}
+            </td>
+          </tr>`);
+    }
+
+    return sections.join('\n');
+  }
+
+  function buildEmailHtml(d, mode = 'auto') {
+    let darkStyles = '';
+    let colorSchemeMeta = '<meta name="color-scheme" content="light dark">\n  <meta name="supported-color-schemes" content="light dark">';
+
+    if (mode === 'auto') {
+      darkStyles = d.opt_darkmode ? `
+    @media (prefers-color-scheme: dark) {${DARK_RULES}
+    }
+    [data-ogsc] .bg-outer { background-color: #1a1612 !important; }
+    [data-ogsc] .bg-inner { background-color: #2a2319 !important; }
+    [data-ogsc] .text-main { color: #ebe4d4 !important; }
+    [data-ogsc] .text-muted { color: #b8b0a0 !important; }
+    [data-ogsc] .text-faint { color: #8a8272 !important; }
+    [data-ogsc] .divider-color { border-color: #3d3528 !important; }
+    [data-ogsc] .footer-bg { background-color: #1a1612 !important; }
+    [data-ogsc] .card-link { color: #EE6B2F !important; }
+    [data-ogsc] .stats-divider { border-color: #3d3528 !important; }
+    [data-ogsc] .stats-bg { background-color: #201a14 !important; }` : '';
+    } else if (mode === 'dark') {
+      darkStyles = DARK_RULES;
+      colorSchemeMeta = '<meta name="color-scheme" content="dark only">';
+    } else if (mode === 'light') {
+      darkStyles = '';
+      colorSchemeMeta = '<meta name="color-scheme" content="light only">';
+    }
+
+    const webViewBlock = d.opt_webversion ? `
+          <tr>
+            <td align="center" style="padding: 10px 20px 0 20px; font-family: Arial, sans-serif; font-size: 11px; color: #888888;" class="text-faint">
+              Email not displaying correctly? <a href="{{web_version_url}}" class="text-faint card-link" style="color: #888888; text-decoration: underline;">View in browser</a>
+            </td>
+          </tr>` : '';
+
+    const logoHeaderBlock = buildLogoHeaderBlock(d);
+    const statsBlock = buildStatsBlock(d);
+    const bannerBlock = buildBannerBlock(d);
+    const complianceFooter = buildComplianceFooter(d);
+
+    const permissionBlock = d.opt_permission ? `
+              <p class="text-faint" style="margin: 0 0 10px 0; font-family: Arial, sans-serif; font-size: 11px; line-height: 1.5; color: #888888;">
+                You're receiving this email because you registered an account with ${esc(d.company_name)}.
+              </p>` : '';
+
+    const secondaryLinkBlock = d.secondary_link && d.secondary_url ? `
+              <p class="text-muted" style="margin: 0 0 20px 0; font-family: Georgia, 'Times New Roman', serif; font-size: 14px; line-height: 1.6; color: #555555; text-align: center;">
+                <a href="${esc(d.secondary_url)}" class="card-link" style="color: ${esc(d.brand_color)}; text-decoration: underline;">${esc(d.secondary_link)} →</a>
+              </p>` : '';
+
+    return `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="format-detection" content="telephone=no">
+  ${colorSchemeMeta}
+  <title>${esc(d.subject)}</title>
+  <!--[if mso]>
+  <noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript>
+  <![endif]-->
+  <style>
+    body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+    table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+    img { -ms-interpolation-mode: bicubic; border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none; }
+    body { margin: 0 !important; padding: 0 !important; width: 100% !important; }
+    a { text-decoration: none; }
+    .cta-btn:hover { opacity: 0.9; }${darkStyles}
+    @media only screen and (max-width: 620px) {
+      .container { width: 100% !important; max-width: 100% !important; }
+      .mobile-padding { padding-left: 20px !important; padding-right: 20px !important; }
+    }
+  </style>
+</head>
+<body class="bg-outer" style="margin: 0; padding: 0; background-color: #f5f0e3; font-family: Georgia, 'Times New Roman', serif;">
+
+  <div style="display: none; max-height: 0px; overflow: hidden; font-size: 1px; line-height: 1px; color: #f5f0e3;">
+    ${esc(d.preview)}
+    &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847;
+  </div>
+
+  <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" class="bg-outer" style="background-color: #f5f0e3;">
+    <tr>
+      <td align="center" style="padding: 0;">
+        <table role="presentation" class="container" cellspacing="0" cellpadding="0" border="0" width="600" style="width: 600px; max-width: 600px;">
+${bannerBlock}
+${webViewBlock}
+${logoHeaderBlock}
+          <tr>
+            <td class="mobile-padding bg-inner" style="background-color: #ffffff; padding: 36px 40px 36px 40px; border: 1px solid #e8e0ca;">
+              <p class="text-main" style="margin: 0 0 20px 0; font-family: Georgia, 'Times New Roman', serif; font-size: 16px; line-height: 1.5; color: #1a1a1a;">${esc(d.greeting)}</p>
+${paragraphs(d.body)}
+${statsBlock}
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: 28px 0 12px 0;">
+                <tr>
+                  <td align="center">
+                    <!--[if mso]>
+                    <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="${esc(d.cta_url)}" style="height:48px;v-text-anchor:middle;width:260px;" arcsize="8%" stroke="f" fillcolor="${esc(d.brand_color)}">
+                      <w:anchorlock/>
+                      <center style="color:#ffffff;font-family:Arial,sans-serif;font-size:14px;font-weight:600;letter-spacing:0.5px;">${esc(d.cta_text.toUpperCase())}</center>
+                    </v:roundrect>
+                    <![endif]-->
+                    <!--[if !mso]><!-- -->
+                    <a href="${esc(d.cta_url)}" class="cta-btn" style="display: inline-block; padding: 15px 36px; background-color: ${esc(d.brand_color)}; color: #ffffff; font-family: Arial, sans-serif; font-size: 14px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; text-decoration: none; border-radius: 3px; mso-hide: all;">${esc(d.cta_text)}</a>
+                    <!--<![endif]-->
+                  </td>
+                </tr>
+              </table>
+${secondaryLinkBlock}
+              <p class="text-muted" style="margin: 24px 0 0 0; font-family: Georgia, 'Times New Roman', serif; font-size: 15px; font-style: italic; color: #555555;">${esc(d.sender_signature)}</p>
+            </td>
+          </tr>
+${complianceFooter}
+
+          <tr>
+            <td class="mobile-padding footer-bg" style="padding: 24px 40px 36px 40px; border-top: 1px solid #ddd3b9;">
+${permissionBlock}
+              <p class="text-faint" style="margin: 10px 0 0 0; font-family: Arial, sans-serif; font-size: 11px; line-height: 1.6; color: #888888;">
+                <a href="{{unsubscribe_url}}" class="text-faint" style="color: #888888; text-decoration: underline;">Unsubscribe</a>
+                &nbsp;·&nbsp;
+                <a href="{{preferences_url}}" class="text-faint" style="color: #888888; text-decoration: underline;">Manage preferences</a>
+                &nbsp;·&nbsp;
+                <a href="${esc(d.privacy_url)}" class="text-faint" style="color: #888888; text-decoration: underline;">Privacy policy</a>
+              </p>
+              <p class="text-faint" style="margin: 12px 0 0 0; font-family: Arial, sans-serif; font-size: 10px; line-height: 1.5; color: #aaaaaa;">
+                © ${new Date().getFullYear()} ${esc(d.company_name)}. All rights reserved.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+  }
+
+  function highlightHtml(code) {
+    return esc(code)
+      .replace(/(&lt;!--[\s\S]*?--&gt;)/g, '<span class="c">$1</span>')
+      .replace(/(\{\{[^}]+\}\}|\*\|[^|]+\|\*|&lt;%[^%]+%&gt;|\{%[^%]+%\})/g, '<span class="m">$1</span>')
+      .replace(/(&lt;\/?)([a-zA-Z][a-zA-Z0-9]*)/g, '$1<span class="t">$2</span>')
+      .replace(/ ([a-zA-Z\-:]+)=(&quot;)/g, ' <span class="a">$1</span>=$2')
+      .replace(/(&quot;)([^&]*?)(&quot;)/g, '$1<span class="v">$2</span>$3');
+  }
+
+  window.buildCurrent = () => {
+    const data = getData();
+    builtVersions = [{
+      versionNum: loadedCampaign ? (loadedCampaign.versions[activeVersionIdx].version_number || activeVersionIdx + 1) : 1,
+      angle: loadedCampaign ? loadedCampaign.versions[activeVersionIdx].angle : null,
+      subject: data.subject,
+      data: data
+    }];
+    activeOutputIdx = 0;
+    render();
+  };
+
+  window.buildAll = () => {
+    if (!loadedCampaign) return;
+    builtVersions = loadedCampaign.versions.map((v, i) => {
+      const data = getData({ subject: (v.subject_lines || [''])[0] || '', preview: (v.preview_texts || [''])[0] || '', body: v.email_body || '', cta_text: (v.ctas || [''])[0] || '' });
+      return { versionNum: v.version_number || i + 1, angle: v.angle || null, subject: data.subject, data: data };
+    });
+    activeOutputIdx = 0;
+    render();
+  };
+
+  const output = document.getElementById('output-content');
+
+  function render() {
+    if (!builtVersions.length) return;
+    const current = builtVersions[activeOutputIdx];
+    const esp = document.getElementById('esp').value;
+    const productionHtmlRaw = buildEmailHtml(current.data, 'auto');
+    const productionHtml = convertMergeTags(productionHtmlRaw, esp);
+    const previewHtml = buildEmailHtml(current.data, previewMode);
+    current.html = productionHtml;
+
+    const versionTabsHtml = builtVersions.length > 1 ? `<div class="output-version-tabs">${builtVersions.map((v, i) => `<button class="o-tab ${i === activeOutputIdx ? 'active' : ''}" onclick="selectOutput(${i})"><span class="num">№${String(v.versionNum).padStart(2, '0')}</span><span>${esc(v.angle || 'Version ' + v.versionNum)}</span></button>`).join('')}</div>` : '';
+    const modeToggleHtml = currentView === 'preview' ? `<div class="output-subheader"><div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-muted);">Preview rendering mode</div><div class="mode-toggle"><button class="mode-btn ${previewMode === 'light' ? 'active' : ''}" onclick="setPreviewMode('light')"><span class="ico light"></span>Light</button><button class="mode-btn ${previewMode === 'dark' ? 'active' : ''}" onclick="setPreviewMode('dark')"><span class="ico dark"></span>Dark</button><button class="mode-btn ${previewMode === 'auto' ? 'active' : ''}" onclick="setPreviewMode('auto')"><span class="ico auto"></span>Auto</button></div></div>` : '';
+    const wrapClass = (currentView === 'preview' && previewMode === 'dark') ? 'preview-wrap dark-preview' : 'preview-wrap';
+    const viewBlock = currentView === 'preview' ? `<div class="${wrapClass}"><iframe class="preview-frame" srcdoc="${esc(previewHtml)}"></iframe></div>` : `<pre class="code-view">${highlightHtml(productionHtml)}</pre>`;
+    const espTag = esp !== 'generic' ? `<span class="esp-tag">${esc(ESP_MAPPINGS[esp].label)}</span>` : '';
+
+    output.innerHTML = `<div class="output-header"><div class="output-title-block"><div class="t">${esc(current.subject)} ${espTag}</div><div class="m">${productionHtml.length.toLocaleString()} chars · ${builtVersions.length} version${builtVersions.length === 1 ? '' : 's'} · ${esp === 'generic' ? 'generic tags' : ESP_MAPPINGS[esp].label + ' format'}</div></div><div class="tabs"><button class="tab ${currentView === 'preview' ? 'active' : ''}" onclick="switchView('preview')">Preview</button><button class="tab ${currentView === 'code' ? 'active' : ''}" onclick="switchView('code')">HTML</button></div><div class="action-btns"><button class="action-btn" id="copy-btn" onclick="copyHtml()">Copy HTML</button><button class="action-btn" onclick="downloadHtml()">Download</button>${builtVersions.length > 1 ? '<button class="action-btn" onclick="downloadAll()">Download All</button>' : ''}</div></div>${modeToggleHtml}${versionTabsHtml}${viewBlock}`;
+  }
+
+  window.selectOutput = (i) => { activeOutputIdx = i; render(); };
+  window.switchView = (v) => { currentView = v; render(); };
+  window.setPreviewMode = (m) => { previewMode = m; render(); };
+
+  document.getElementById('esp').addEventListener('change', () => { if (builtVersions.length) render(); });
+
+  window.copyHtml = () => {
+    navigator.clipboard.writeText(builtVersions[activeOutputIdx].html).then(() => {
+      const btn = document.getElementById('copy-btn');
+      btn.textContent = 'Copied ✓';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'Copy HTML'; btn.classList.remove('copied'); }, 1400);
+    });
+  };
+
+  window.downloadHtml = () => {
+    const v = builtVersions[activeOutputIdx];
+    const esp = document.getElementById('esp').value;
+    const blob = new Blob([v.html], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const slug = v.subject.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 50);
+    a.href = url;
+    a.download = `v${v.versionNum}-${slug || 'email'}${esp !== 'generic' ? '-' + esp : ''}.html`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  window.downloadAll = () => {
+    const esp = document.getElementById('esp').value;
+    builtVersions.forEach((v, i) => {
+      setTimeout(() => {
+        const blob = new Blob([v.html], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        const slug = v.subject.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 50);
+        a.href = url;
+        a.download = `v${v.versionNum}-${slug || 'email'}${esp !== 'generic' ? '-' + esp : ''}.html`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }, i * 300);
+    });
+  };
+
+  window.addEventListener('load', () => { document.getElementById('build-btn').click(); });
+</script>
+</body>
+</html>

@@ -234,45 +234,49 @@ The top 100 traders at the end of the month share a $50,000 prize pool. A $100 m
         <div class="field">
           <label class="field-label">Regulator Template</label>
           <div class="compliance-tabs">
-            <button type="button" class="comp-tab active" onclick="loadComplianceTemplate('wetrade_compact')">Compact</button>
+            <button type="button" class="comp-tab active" onclick="loadComplianceTemplate('wetrade_slim')">Slim</button>
             <button type="button" class="comp-tab" onclick="loadComplianceTemplate('wetrade_full')">Full</button>
+            <button type="button" class="comp-tab" onclick="loadComplianceTemplate('wetrade_compact')">Compact</button>
             <button type="button" class="comp-tab" onclick="loadComplianceTemplate('wetrade_svg')">SVG Only</button>
             <button type="button" class="comp-tab" onclick="loadComplianceTemplate('wetrade_cysec')">CySEC Only</button>
             <button type="button" class="comp-tab" onclick="loadComplianceTemplate('wetrade_asic')">ASIC Only</button>
           </div>
-          <div class="field-hint">Click a template to replace the blocks below. Compact is good for standard promotional emails; switch to Full when compliance requires all entity details.</div>
+          <div class="field-hint"><strong>Slim</strong> (recommended) — Risk Warning shown, regulatory info and disclaimer collapse to a single link. <strong>Full</strong> — verbatim 5-entity disclaimer. <strong>Compact</strong> — shortened text version (review with compliance).</div>
         </div>
 
         <div class="field">
           <label class="field-label" for="entity_disclosure">Entity Authorization Block</label>
-          <textarea id="entity_disclosure" rows="5" class="compliance">WeTrade International LLC is authorised and regulated by the Financial Services Authority of Saint Vincent and the Grenadines (LLC No: 1945 LLC 2022), registered at Euro House, Richmond Hill Road, Kingstown, Saint Vincent and the Grenadines.
-
-This website is owned and operated by WeTrade International LLC.</textarea>
-          <div class="field-hint">Compact single-entity block for LATAM campaigns. Click "WeTrade Full" tab above to load all 5 entities when needed.</div>
+          <textarea id="entity_disclosure" rows="3" class="compliance"></textarea>
+          <div class="field-hint">Empty in Slim mode — replaced by single legal link. Click "Full" tab above to load all 5 entities.</div>
         </div>
 
         <div class="field">
           <label class="field-label" for="payment_notice">Payment & Operator Notice</label>
           <textarea id="payment_notice" rows="2" class="compliance"></textarea>
-          <div class="field-hint">Leave empty for compact footer. Used for full multi-entity block.</div>
+          <div class="field-hint">Empty in Slim mode.</div>
         </div>
 
         <div class="field">
           <label class="field-label" for="restricted_territories">Restricted Territories</label>
-          <textarea id="restricted_territories" rows="3" class="compliance">WeTrade does not provide services to residents of the USA, EU member countries, UK, Australia, and other restricted jurisdictions. See our Terms of Service for the complete list.</textarea>
+          <textarea id="restricted_territories" rows="2" class="compliance"></textarea>
+          <div class="field-hint">Empty in Slim mode — covered by legal link.</div>
         </div>
 
         <div class="field">
           <label class="field-label" for="risk_warning">Risk Warning</label>
-          <textarea id="risk_warning" rows="2" class="compliance">Risk Warning: Trading CFDs and Margin FX Contracts involves significant risk of loss. You may lose more than your initial deposit. These products may not be suitable for all investors.</textarea>
+          <textarea id="risk_warning" rows="4" class="compliance">Risk Warning: Investing in CFDs and Margin FX Contracts carries high risks and is not suitable for all investors. You may lose more than your initial deposit. These products may not be suitable for all individuals. Before you register for our services, it is important for you to thoroughly understand our Risk Disclosure.</textarea>
+          <div class="field-hint">Always shown — regulator-required prominent display.</div>
         </div>
 
         <div class="field">
           <label class="field-label" for="disclaimer_text">Disclaimer</label>
-          <textarea id="disclaimer_text" rows="2" class="compliance">Disclaimer: This communication is for informational purposes only and does not constitute investment advice, an offer, or a solicitation. WeTrade is not liable for any actions taken based on this information.</textarea>
+          <textarea id="disclaimer_text" rows="2" class="compliance"></textarea>
+          <div class="field-hint">Empty in Slim mode — covered by legal link.</div>
         </div>
 
         <div class="field"><label class="field-label" for="privacy_url">Privacy Policy URL</label><input id="privacy_url" type="url" value="https://wetrade.com/privacy" /></div>
+
+        <div class="field"><label class="field-label" for="legal_url">Legal Page URL</label><input id="legal_url" type="url" value="https://wetrade.com/legal" /><div class="field-hint">Single link to the page hosting full regulatory info, restricted territories, and disclaimer. Used in the slim footer.</div></div>
 
         <div class="form-section">Export Format</div>
         <div class="field"><label class="field-label" for="esp">ESP Platform</label>
@@ -316,12 +320,20 @@ This website is owned and operated by WeTrade International LLC.</textarea>
   window.toggleLogoSection = () => document.getElementById('logo-section-body').classList.toggle('disabled', !document.getElementById('opt_logo').checked);
   window.toggleStatsSection = () => document.getElementById('stats-section-body').classList.toggle('disabled', !document.getElementById('opt_stats').checked);
   window.toggleBannerSection = () => document.getElementById('banner-section-body').classList.toggle('disabled', !document.getElementById('opt_banner').checked);
+  window.toggleFooterBannerSection = () => document.getElementById('footer-banner-section-body').classList.toggle('disabled', !document.getElementById('opt_footer_banner').checked);
   window.setLogoAlign = (align) => {
     document.getElementById('logo_align').value = align;
     document.querySelectorAll('.align-btn').forEach(b => b.classList.toggle('active', b.getAttribute('data-align') === align));
   };
 
   const COMPLIANCE_TEMPLATES = {
+    wetrade_slim: {
+      entity: ``,
+      payment: ``,
+      restricted: ``,
+      risk: `Risk Warning: Investing in CFDs and Margin FX Contracts carries high risks and is not suitable for all investors. You may lose more than your initial deposit. These products may not be suitable for all individuals. Before you register for our services, it is important for you to thoroughly understand our Risk Disclosure.`,
+      disclaimer: ``
+    },
     wetrade_compact: {
       entity: `WeTrade International LLC is authorised and regulated by the Financial Services Authority of Saint Vincent and the Grenadines (LLC No: 1945 LLC 2022), registered at Euro House, Richmond Hill Road, Kingstown, Saint Vincent and the Grenadines.
 
@@ -511,12 +523,14 @@ Note: This website is owned and operated by WeTrade International LLC, a legal e
       risk_warning: valOf('risk_warning'),
       disclaimer_text: valOf('disclaimer_text'),
       privacy_url: valOf('privacy_url'),
+      legal_url: valOf('legal_url'),
       opt_logo: chk('opt_logo'), logo_url: valOf('logo_url'), logo_alt: valOf('logo_alt'), logo_align: valOf('logo_align'),
       opt_stats: chk('opt_stats'),
       stat1_value: valOf('stat1_value'), stat1_label: valOf('stat1_label'),
       stat2_value: valOf('stat2_value'), stat2_label: valOf('stat2_label'),
       stat3_value: valOf('stat3_value'), stat3_label: valOf('stat3_label'),
       opt_banner: chk('opt_banner'), banner_url: valOf('banner_url'), banner_alt: valOf('banner_alt'),
+      opt_footer_banner: chk('opt_footer_banner'), footer_banner_url: valOf('footer_banner_url'), footer_banner_alt: valOf('footer_banner_alt'), footer_banner_link: valOf('footer_banner_link'),
       opt_webversion: chk('opt_webversion'), opt_permission: chk('opt_permission'), opt_darkmode: chk('opt_darkmode')
     }, overrides);
   }
@@ -593,13 +607,63 @@ Note: This website is owned and operated by WeTrade International LLC, a legal e
           </tr>`;
   }
 
+  function buildFooterBannerBlock(d) {
+    if (!d.opt_footer_banner || !d.footer_banner_url) return '';
+    const imgTag = `<img src="${esc(d.footer_banner_url)}" alt="${esc(d.footer_banner_alt)}" width="600" style="display: block; width: 100%; max-width: 600px; height: auto; border: 0; outline: none; text-decoration: none;" />`;
+    const wrapped = d.footer_banner_link ? `<a href="${esc(d.footer_banner_link)}" style="text-decoration: none; display: block;">${imgTag}</a>` : imgTag;
+    // Footer banner sits between compliance text and unsubscribe row.
+    // 24px top padding creates visual breathing room from compliance paragraphs.
+    return `
+          <tr>
+            <td style="padding: 24px 0 0 0;">
+              ${wrapped}
+            </td>
+          </tr>`;
+  }
+
   function buildComplianceFooter(d) {
     const sections = [];
 
-    if (d.entity_disclosure && d.entity_disclosure.trim()) {
+    // Risk Warning — always shown if present (regulator-required prominent display)
+    if (d.risk_warning && d.risk_warning.trim()) {
       sections.push(`
           <tr>
             <td class="mobile-padding" style="padding: 28px 40px 0 40px;">
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #faf7ef; border-left: 3px solid #EE6B2F;" class="stats-bg">
+                <tr>
+                  <td style="padding: 14px 16px;">
+                    <p class="text-faint" style="margin: 0 0 6px 0; font-family: Arial, sans-serif; font-size: 10px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: #C76033;">Risk Warning</p>
+                    <p class="text-muted" style="margin: 0; font-family: Arial, sans-serif; font-size: 11px; line-height: 1.55; color: #555555;">${esc(d.risk_warning.replace(/^Risk Warning:\s*/i, ''))}</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>`);
+    }
+
+    // SLIM MODE: if no entity disclosure but legal_url is set, show one-line legal link
+    const hasFullText = (d.entity_disclosure && d.entity_disclosure.trim()) ||
+                        (d.payment_notice && d.payment_notice.trim()) ||
+                        (d.restricted_territories && d.restricted_territories.trim()) ||
+                        (d.disclaimer_text && d.disclaimer_text.trim());
+
+    if (!hasFullText && d.legal_url) {
+      sections.push(`
+          <tr>
+            <td class="mobile-padding" style="padding: 16px 40px 0 40px;">
+              <p class="text-muted" style="margin: 0; font-family: Arial, sans-serif; font-size: 10.5px; line-height: 1.6; color: #888888;">
+                WeTrade is regulated in multiple jurisdictions. See our <a href="${esc(d.legal_url)}" class="card-link" style="color: #888888; text-decoration: underline;">Legal page</a> for full regulatory information, restricted territories, and disclaimer.
+              </p>
+            </td>
+          </tr>`);
+      return sections.join('\n');
+    }
+
+    // FULL/COMPACT MODE: show whichever individual blocks have text
+    if (d.entity_disclosure && d.entity_disclosure.trim()) {
+      sections.push(`
+          <tr>
+            <td class="mobile-padding" style="padding: 16px 40px 0 40px;">
               <p class="text-faint" style="margin: 0 0 10px 0; font-family: Arial, sans-serif; font-size: 10px; font-weight: 600; letter-spacing: 1.2px; text-transform: uppercase; color: #888888;">Regulatory Information</p>
               ${compParagraphs(d.entity_disclosure)}
             </td>
@@ -621,22 +685,6 @@ Note: This website is owned and operated by WeTrade International LLC, a legal e
             <td class="mobile-padding" style="padding: 8px 40px 0 40px;">
               <p class="text-faint" style="margin: 0 0 6px 0; font-family: Arial, sans-serif; font-size: 10px; font-weight: 600; letter-spacing: 1.2px; text-transform: uppercase; color: #888888;">Restricted Territories</p>
               ${compParagraphs(d.restricted_territories)}
-            </td>
-          </tr>`);
-    }
-
-    if (d.risk_warning && d.risk_warning.trim()) {
-      sections.push(`
-          <tr>
-            <td class="mobile-padding" style="padding: 16px 40px 0 40px;">
-              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #faf7ef; border-left: 3px solid #EE6B2F;" class="stats-bg">
-                <tr>
-                  <td style="padding: 14px 16px;">
-                    <p class="text-faint" style="margin: 0 0 6px 0; font-family: Arial, sans-serif; font-size: 10px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: #C76033;">Risk Warning</p>
-                    <p class="text-muted" style="margin: 0; font-family: Arial, sans-serif; font-size: 11px; line-height: 1.55; color: #555555;">${esc(d.risk_warning.replace(/^Risk Warning:\s*/i, ''))}</p>
-                  </td>
-                </tr>
-              </table>
             </td>
           </tr>`);
     }
@@ -690,6 +738,7 @@ Note: This website is owned and operated by WeTrade International LLC, a legal e
     const logoHeaderBlock = buildLogoHeaderBlock(d);
     const statsBlock = buildStatsBlock(d);
     const bannerBlock = buildBannerBlock(d);
+    const footerBannerBlock = buildFooterBannerBlock(d);
     const complianceFooter = buildComplianceFooter(d);
 
     const permissionBlock = d.opt_permission ? `
@@ -766,6 +815,7 @@ ${secondaryLinkBlock}
             </td>
           </tr>
 ${complianceFooter}
+${footerBannerBlock}
 
           <tr>
             <td class="mobile-padding footer-bg" style="padding: 24px 40px 36px 40px; border-top: 1px solid #ddd3b9;">
